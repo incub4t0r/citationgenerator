@@ -2,7 +2,7 @@
 	import _ from 'lodash';
 
     function getCurrentDate() {
-        const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const date = new Date();
         const day = date.getDate();
         const monthIndex = date.getMonth();
@@ -10,18 +10,61 @@
         return `${day} ${months[monthIndex]} ${year}`;
     }
 
-	let styles = [
+    const ranks = [
+        {id: "CDT", name: "Cadet"},
+        {id: "Dr", name: "Doctor"},
+        {id: "LT", name: "LT"},
+        {id: "CPT", name: "CPT"},
+        {id: "MAJ", name: "MAJ"},
+        {id: "LTC", name: "LTC"},
+        {id: "COL", name: "COL"},
+        {id: "GEN", name: "GEN"},
+    ]
+
+	const styles = [
 		{ id: 'MLA', name: 'Modern Language Association' },
 		{ id: 'APA', name: 'American Psychological Association' },
 		{ id: 'Chicago', name: 'Chicago Manual of Style' },
 		{ id: 'CSE', name: 'Council of Science Editors' }
 	];
+
+    /**
+	 * @type {any[]}
+	 */
+	const formatting = [
+		{
+			id: 'MLA',
+			name: 'Modern Language Association',
+			format:
+				'{citer_info.name} {citer_info.rank} {citer_info.company} {citer_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.',
+        },
+		{
+			id: 'APA',
+			name: 'American Psychological Association',
+			format:
+				'{citer_info.name} {citer_info.rank} {citer_info.company} {citer_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
+		},
+		{
+			id: 'Chicago',
+			name: 'Chicago Manual of Style',
+			format:
+				'{citer_info.name} {citer_info.rank} {citer_info.company} {citer_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
+		},
+		{
+			id: 'CSE',
+			name: 'Council of Science Editors',
+			format: '{citer_info.rank} {citer_info.name}, {citer_info.company} {citer_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
+		}
+	];
+
 	let style = 'MLA';
 
-	let cadet_info = {
+	let citer_info = {
+        rank: '',
 		name: '',
 		company: '',
-		year: ''
+		year: '',
+        format_name: ''
 	};
 
 	let citation_info = {
@@ -31,53 +74,63 @@
 		location: 'West Point, NY'
 	};
 
-    /**
-	 * @type {any[]}
-	 */
-	let formatting = [
-		{
-			id: 'MLA',
-			name: 'Modern Language Association',
-			format:
-				'CDT {cadet_info.name}, {cadet_info.company} {cadet_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
-		},
-		{
-			id: 'APA',
-			name: 'American Psychological Association',
-			format:
-				'CDT {cadet_info.name}, {cadet_info.company} {cadet_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
-		},
-		{
-			id: 'Chicago',
-			name: 'Chicago Manual of Style',
-			format:
-				'CDT {cadet_info.name}, {cadet_info.company} {cadet_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
-		},
-		{
-			id: 'CSE',
-			name: 'Council of Science Editors',
-			format: 'CDT {cadet_info.name}, {cadet_info.company} {cadet_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
-		}
-	];
-
 	let full_citation = '';
 	$: {
-		let selectedFormat = _.find(formatting, { id: style });
-		full_citation = selectedFormat.format;
-		for (let [key, value] of Object.entries(cadet_info)) {
-            if (key.includes('name')){
-                // value = value.split(' ');
-                // value = value.toUpperCase();
+        citer_info.name = preparse_info.name.split(" ").reverse().join(", ");
+        citer_info.company = preparse_info.company.split("").join("-");
+        citer_info.year = (() => {
+            if (preparse_info.year == null || preparse_info.year.toString().length == 0){
+                return "";
             }
-			full_citation = full_citation.replace(`{cadet_info.${key}}`, value);
+            else if (preparse_info.year.toString().length >= 4) {
+                return ("'" + preparse_info.year.toString().slice(2,4))
+            }
+            else {
+                return ("'" + preparse_info.year)
+            }
+        })();
+        let selectedFormat = _.find(formatting, { id: style });
+		full_citation = selectedFormat.format;
+		for (let [key, value] of Object.entries(citer_info)) {
+            if (key.includes('name')){
+            }
+			full_citation = full_citation.replace(`{citer_info.${key}}`, value);
 		}
 		for (let [key, value] of Object.entries(citation_info)) {
 			full_citation = full_citation.replace(`{citation_info.${key}}`, value);
 		}
 	}
 
+    let preparse_info = {
+        name: '',
+        company: '',
+        year: '',
+    }
+
     console.log("Go Icemen 🐻‍❄️")
 </script>
+
+
+<style>
+    span {
+        width: 150px;
+    }
+    label {
+        width: 150px;
+    }
+
+    .card {
+        box-shadow: 0 2px 15px -3px rgba(0,0,0,0.07),0 10px 20px -2px rgba(0,0,0,0.04);
+        border: 0;
+    }
+
+    textarea {
+        width: 100%;
+        border-radius: 5px;
+        border: insert(0 2px 15px -3px rgba(0,0,0,0.07),0 10px 20px -2px rgba(0,0,0,0.04));
+
+    }
+</style>
 
 <head>
 	<link
@@ -96,34 +149,24 @@
 <div class="container mt-4">
 	<h1 style="display: flex; justify-content: center;">Citation Generator</h1>
 	<hr />
-    <style>
-        span {
-            width: 150px;
-        }
-        label {
-            width: 150px;
-        }
-
-        .card {
-            box-shadow: 0 2px 15px -3px rgba(0,0,0,0.07),0 10px 20px -2px rgba(0,0,0,0.04);
-            border: 0;
-        }
-
-        textarea {
-            width: 100%;
-            border-radius: 5px;
-            border: insert(0 2px 15px -3px rgba(0,0,0,0.07),0 10px 20px -2px rgba(0,0,0,0.04));
-
-        }
-    </style>
+    {preparse_info.name}
 	<div class="card">
 		<div class="card-body">
+            <div class="input-group mb-1">
+				<span class="input-group-text">Rank</span>
+                <select class="form-select" bind:value={citer_info.rank}>
+                    {#each ranks as rank}
+                        <option value={rank.id}>{rank.name}</option>
+                    {/each}
+				</select>
+				
+			</div>
 			<div class="input-group mb-1">
 				<span class="input-group-text">Name</span>
 				<input
 					type="text"
 					class="form-control"
-					bind:value={cadet_info.name}
+					bind:value={preparse_info.name}
 					placeholder="John Smith"
 				/>
 			</div>
@@ -133,7 +176,7 @@
 					type="text"
 					maxlength="2"
 					class="form-control"
-					bind:value={cadet_info.company}
+					bind:value={preparse_info.company}
 					placeholder="I3"
 				/>
 			</div>
@@ -143,8 +186,9 @@
 					type="number"
 					min="2023"
 					class="form-control"
-					bind:value={cadet_info.year}
+					bind:value={preparse_info.year}
 					placeholder="2023"
+
 				/>
 			</div>
 			<div class="input-group mb-1">
@@ -155,15 +199,18 @@
 					<option value="written communication">Written Communication</option>
 					<option value="other">Other</option>
 				</select>
-				<!-- {#if (citation_info.assistance == "Other")}
-            <div class="input-group">
-                <input type="text" class="form-control" bind:value={citation_info.assistance} placeholder="Other">
-            </div>
-        {/if} -->
+				{#if (citation_info.assistance == "Other")}
+                    <div class="input-group">
+                        <input type="text" class="form-control" bind:value={citation_info.assistance} placeholder="Other">
+                    </div>
+                {/if}
 			</div>
 			<div class="input-group mb-1">
 				<textarea rows="5" bind:value={citation_info.assistance} />
 			</div>
+            <!-- <div class="input-group mb-1">
+				<input type="text" class="datepicker">
+			</div> -->
 			<br />
             <div class="input-group">
                 <label class="input-group-text" for="inputGroupSelect01">Citation Style</label>
