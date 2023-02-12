@@ -28,35 +28,6 @@
 		{ id: 'CSE', name: 'Council of Science Editors' }
 	];
 
-    /**
-	 * @type {any[]}
-	 */
-	const formatting = [
-		{
-			id: 'MLA',
-			name: 'Modern Language Association',
-			format:
-				'{citer_info.name} {citer_info.rank} {citer_info.company} {citer_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.',
-        },
-		{
-			id: 'APA',
-			name: 'American Psychological Association',
-			format:
-				'{citer_info.name} {citer_info.rank} {citer_info.company} {citer_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
-		},
-		{
-			id: 'Chicago',
-			name: 'Chicago Manual of Style',
-			format:
-				'{citer_info.name} {citer_info.rank} {citer_info.company} {citer_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
-		},
-		{
-			id: 'CSE',
-			name: 'Council of Science Editors',
-			format: '{citer_info.rank} {citer_info.name}, {citer_info.company} {citer_info.year}. Assistance given to author, {citation_info.assistance_type}. {citation_info.assistance}. {citation_info.location}. {citation_info.date}.'
-		}
-	];
-
 	let style = 'MLA';
 
 	let citer_info = {
@@ -74,9 +45,34 @@
 		location: 'West Point, NY'
 	};
 
+    let preparse_info = {
+        name: '',
+        company: '',
+        year: '',
+    }
+
 	let full_citation = '';
-	$: {
-        citer_info.name = preparse_info.name.split(" ").reverse().join(", ");
+
+    /**
+	 * @param {string} str
+	 */
+    function apa_name(str) {
+        if (str == null || str.length == 0) return "";
+        let names = str.split(' ');
+        let lastName = names[names.length - 1];
+        let firstInitial = names[0][0];
+        return `${lastName}, ${firstInitial}`;
+    }
+
+    /**
+	 * @param {string} str
+	 */
+    function format_name(str) {
+        if (str == null || str.length == 0) return "";
+        return str.split(" ").reverse().join(", ");
+    }
+
+    $: {
         citer_info.company = preparse_info.company.split("").join("-");
         citer_info.year = (() => {
             if (preparse_info.year == null || preparse_info.year.toString().length == 0){
@@ -85,28 +81,53 @@
             else if (preparse_info.year.toString().length >= 4) {
                 return ("'" + preparse_info.year.toString().slice(2,4))
             }
+            else if (preparse_info.year.toString().length == 3) {
+                return ("'" + preparse_info.year.toString().slice(1,3))
+            }
             else {
                 return ("'" + preparse_info.year)
             }
         })();
-        let selectedFormat = _.find(formatting, { id: style });
-		full_citation = selectedFormat.format;
-		for (let [key, value] of Object.entries(citer_info)) {
-            if (key.includes('name')){
-            }
-			full_citation = full_citation.replace(`{citer_info.${key}}`, value);
-		}
-		for (let [key, value] of Object.entries(citation_info)) {
-			full_citation = full_citation.replace(`{citation_info.${key}}`, value);
-		}
-	}
+    }
+    $: formatted_author = style === "APA" ? apa_name(preparse_info.name) : format_name(preparse_info.name);
+    $: apa = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${citation_info.date}.`;
+    $: mla = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${citation_info.date}.`;
+    $: chicago = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${citation_info.date}.`;
+    $: cse = `${citer_info.rank} ${formatted_author}, ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${citation_info.date}.`;
+    $: full_citation = style == 'MLA' ? mla : style == 'APA' ? apa : style == 'Chicago' ? chicago : cse;
 
-    let preparse_info = {
-        name: '',
-        company: '',
-        year: '',
+    /**
+	 * @param {string} text
+	 */
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            console.log('Copying to clipboard was successful!');
+        }, function(err) {
+            console.error('Could not copy text: ', err);
+        });
     }
 
+    function reset() {
+        citer_info = {
+            rank: '',
+            name: '',
+            company: '',
+            year: '',
+            format_name: ''
+        };
+        citation_info = {
+            assistance_type: '',
+            assistance: '',
+            date: getCurrentDate(),
+            location: 'West Point, NY'
+        };
+        preparse_info = {
+            name: '',
+            company: '',
+            year: '',
+        }
+        full_citation = '';
+    }
     console.log("Go Icemen 🐻‍❄️")
 </script>
 
@@ -130,6 +151,22 @@
         border: insert(0 2px 15px -3px rgba(0,0,0,0.07),0 10px 20px -2px rgba(0,0,0,0.04));
 
     }
+
+    input {
+        box-sizing: border-box;
+        -webkit-user-select: auto !important;
+        -moz-user-select: auto !important;
+        -ms-user-select: auto !important;
+        user-select: auto !important;
+        }
+
+    select {
+    box-sizing: border-box;
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    -ms-user-select: auto !important;
+    user-select: auto !important;
+    }
 </style>
 
 <head>
@@ -149,7 +186,6 @@
 <div class="container mt-4">
 	<h1 style="display: flex; justify-content: center;">Citation Generator</h1>
 	<hr />
-    {preparse_info.name}
 	<div class="card">
 		<div class="card-body">
             <div class="input-group mb-1">
@@ -212,13 +248,17 @@
 				<input type="text" class="datepicker">
 			</div> -->
 			<br />
-            <div class="input-group">
+            <div class="input-group mb-4">
                 <label class="input-group-text" for="inputGroupSelect01">Citation Style</label>
                 <select id="inputGroupSelect01" class="form-select" bind:value={style}>
                     {#each styles as style}
                         <option value={style.id}>{style.name}</option>
                     {/each}
                 </select>
+            </div>
+            <div class="input-group" >
+                <button class="btn btn-primary form-control" on:click={()=>copyToClipboard(full_citation)}>Copy to clipboard</button>
+                <button class="btn btn-warning form-control" on:click={()=>reset()}>Clear</button>
             </div>
 		</div>
 	</div>
@@ -228,14 +268,20 @@
         final_citation {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
+            /* make it look like a textarea */
+            display: block;
         }
     </style>
-    <div class="card">
+    <div class="card mb-4">
         <div class="card-body">
             <final_citation>
                 {full_citation}
             </final_citation>
         </div>
     </div>
-	<br />
+    <div class="card mb-4">
+        <div class="card-body">
+            <a href="https://www.westpoint.edu/sites/default/files/pdfs/ABOUT/Student%20Consumer%20Info/daw-june2011.pdf">Citation style guide</a>
+        </div>
+    </div>
 </div>
