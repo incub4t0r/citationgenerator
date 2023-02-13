@@ -18,7 +18,9 @@
         {id: "MAJ", name: "MAJ"},
         {id: "LTC", name: "LTC"},
         {id: "COL", name: "COL"},
-        {id: "GEN", name: "GEN"},
+        {id: "BG", name: "BG"},
+        {id: "MG", name: "MG"},
+        {id: "LTG", name: "LTG"},
     ]
 
 	const styles = [
@@ -67,11 +69,45 @@
     /**
 	 * @param {string} str
 	 */
+    function cse_name(str) {
+        if (str == null || str.length == 0) return "";
+        let names = str.split(' ');
+        let lastName = names[names.length - 1];
+        return `${lastName}, IB`;
+    }
+
+    /**
+	 * @param {string} str
+	 */
     function format_name(str) {
         if (str == null || str.length == 0) return "";
         return str.split(" ").reverse().join(", ");
     }
 
+    /**
+     * @param {string} str
+     */
+    function mla_date(str) {
+        if (str == null || str.length == 0) return "";
+        return str.split(" ")[0] + " " + str.split(" ")[1].slice(0,3) + ". " + str.split(" ")[2];
+    }
+
+    /**
+     * @param {string} str
+     */
+    function apa_date(str) {
+        if (str == null || str.length == 0) return "";
+        return "(" + str.split(" ")[2] + ")";
+    }
+
+
+    /**
+     * @param {string} str
+     */
+    function cse_date(str) {
+        if (str == null || str.length == 0) return "";
+        return str.split(" ")[2] + " " + str.split(" ")[1].slice(0,3) + " " + str.split(" ")[0];
+    }
     $: {
         citer_info.company = preparse_info.company.split("").join("-");
         citer_info.year = (() => {
@@ -89,18 +125,32 @@
             }
         })();
     }
-    $: formatted_author = style === "APA" ? apa_name(preparse_info.name) : format_name(preparse_info.name);
-    $: apa = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${citation_info.date}.`;
-    $: mla = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${citation_info.date}.`;
+    $: formatted_author = style === "APA" ? apa_name(preparse_info.name) : 
+                                    // "CSE" ? cse_name(preparse_info.name) :
+                                    format_name(preparse_info.name);
+    $: formatted_date = style === "MLA" ? mla_date(citation_info.date) : 
+                                    "APA" ? apa_date(citation_info.date) :
+                                    "Chicago" ? citation_info.date :
+                                    "CSE" ? cse_date(citation_info.date):
+                                    citation_info.date;
+
+    $: mla = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${formatted_date}.`;
+    $: apa = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. ${formatted_date}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}.`;
     $: chicago = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${citation_info.date}.`;
-    $: cse = `${citer_info.rank} ${formatted_author}, ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${citation_info.date}.`;
+    $: cse = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. ${formatted_date}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}.`;
     $: full_citation = style == 'MLA' ? mla : style == 'APA' ? apa : style == 'Chicago' ? chicago : cse;
 
+
+    let copytext = "Copy to clipboard";
     /**
 	 * @param {string} text
 	 */
     function copyToClipboard(text) {
         navigator.clipboard.writeText(text).then(function() {
+            copytext = "Copied!";
+            setTimeout(() => {
+                copytext = "Copy to clipboard";
+            }, 1000);
             console.log('Copying to clipboard was successful!');
         }, function(err) {
             console.error('Could not copy text: ', err);
@@ -166,6 +216,12 @@
     -moz-user-select: auto !important;
     -ms-user-select: auto !important;
     user-select: auto !important;
+    }
+    final_citation {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 12pt;
+        /* make it look like a textarea */
+        display: block;
     }
 </style>
 
@@ -257,21 +313,12 @@
                 </select>
             </div>
             <div class="input-group" >
-                <button class="btn btn-primary form-control" on:click={()=>copyToClipboard(full_citation)}>Copy to clipboard</button>
+                <button class="btn btn-primary form-control" on:click={()=>copyToClipboard(full_citation)}>{copytext}</button>
                 <button class="btn btn-warning form-control" on:click={()=>reset()}>Clear</button>
             </div>
 		</div>
 	</div>
 	<br />
-
-    <style>
-        final_citation {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
-            /* make it look like a textarea */
-            display: block;
-        }
-    </style>
     <div class="card mb-4">
         <div class="card-body">
             <final_citation>
