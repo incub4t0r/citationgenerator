@@ -60,9 +60,9 @@
 	 */
     function apa_name(str) {
         if (str == null || str.length == 0) return "";
-        let names = str.split(' ');
-        let lastName = names[names.length - 1];
-        let firstInitial = names[0][0];
+        let apa_names = str.split(' ');
+        let lastName = apa_names[apa_names.length - 1];
+        let firstInitial = apa_names[0][0];
         return `${lastName}, ${firstInitial}`;
     }
 
@@ -71,8 +71,8 @@
 	 */
     function cse_name(str) {
         if (str == null || str.length == 0) return "";
-        let names = str.split(' ');
-        let lastName = names[names.length - 1];
+        let cse_names = str.split(' ');
+        let lastName = cse_names[cse_names.length - 1];
         return `${lastName}, IB`;
     }
 
@@ -125,14 +125,14 @@
             }
         })();
     }
-    $: formatted_author = style === "APA" ? apa_name(preparse_info.name) : 
-                                    // "CSE" ? cse_name(preparse_info.name) :
-                                    format_name(preparse_info.name);
-    $: formatted_date = style === "MLA" ? mla_date(citation_info.date) : 
-                                    "APA" ? apa_date(citation_info.date) :
-                                    "Chicago" ? citation_info.date :
-                                    "CSE" ? cse_date(citation_info.date):
-                                    citation_info.date;
+    $: formatted_author = (style === "APA") ? apa_name(preparse_info.name) : 
+                            (style === "CSE") ? cse_name(preparse_info.name) :
+                            format_name(preparse_info.name);
+    $: formatted_date = (style === "MLA") ? mla_date(citation_info.date) : 
+                            (style === "APA") ? apa_date(citation_info.date) :
+                            (style === "Chicago") ? citation_info.date :
+                            (style === "CSE") ? cse_date(citation_info.date):
+                            citation_info.date;
 
     $: mla = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}. ${formatted_date}.`;
     $: apa = `${formatted_author} ${citer_info.rank} ${citer_info.company} ${citer_info.year}. ${formatted_date}. Assistance given to author, ${citation_info.assistance_type}. ${citation_info.assistance}. ${citation_info.location}.`;
@@ -176,20 +176,12 @@
             company: '',
             year: '',
         }
-        full_citation = '';
     }
     console.log("Go Icemen 🐻‍❄️")
 </script>
 
 
 <style>
-    span {
-        width: 150px;
-    }
-    label {
-        width: 150px;
-    }
-
     .card {
         box-shadow: 0 2px 15px -3px rgba(0,0,0,0.07),0 10px 20px -2px rgba(0,0,0,0.04);
         border: 0;
@@ -199,23 +191,14 @@
         width: 100%;
         border-radius: 5px;
         border: insert(0 2px 15px -3px rgba(0,0,0,0.07),0 10px 20px -2px rgba(0,0,0,0.04));
-
     }
 
     input {
-        box-sizing: border-box;
-        -webkit-user-select: auto !important;
-        -moz-user-select: auto !important;
-        -ms-user-select: auto !important;
-        user-select: auto !important;
+        font-size: 16px;
         }
 
     select {
-    box-sizing: border-box;
-    -webkit-user-select: auto !important;
-    -moz-user-select: auto !important;
-    -ms-user-select: auto !important;
-    user-select: auto !important;
+        font-size: 16px;
     }
     final_citation {
         font-family: 'Times New Roman', Times, serif;
@@ -223,6 +206,7 @@
         /* make it look like a textarea */
         display: block;
     }
+
 </style>
 
 <head>
@@ -240,21 +224,23 @@
 </head>
 <title> Citation Generator </title>
 <div class="container mt-4">
-	<h1 style="display: flex; justify-content: center;">Citation Generator</h1>
-	<hr />
+    <div class="text-center">
+        <h1 class="display-4 fw-bold">Citation Generator</h1>
+        <h2 class="lead mx-5">Perfectly formatted citations for cadets, by cadets.</h2>
+    </div>
+    <hr />
 	<div class="card">
 		<div class="card-body">
             <div class="input-group mb-1">
-				<span class="input-group-text">Rank</span>
-                <select class="form-select" bind:value={citer_info.rank}>
+                <span class="input-group-text col-sm-3">Rank</span>
+                <select class="form-select col-sm-8" bind:value={citer_info.rank}>
                     {#each ranks as rank}
                         <option value={rank.id}>{rank.name}</option>
                     {/each}
-				</select>
-				
+                </select>
 			</div>
 			<div class="input-group mb-1">
-				<span class="input-group-text">Name</span>
+				<span class="input-group-text col-sm-3">Name</span>
 				<input
 					type="text"
 					class="form-control"
@@ -263,7 +249,7 @@
 				/>
 			</div>
 			<div class="input-group mb-1">
-				<span class="input-group-text">Company</span>
+				<span class="input-group-text col-sm-3">Company</span>
 				<input
 					type="text"
 					maxlength="2"
@@ -273,7 +259,7 @@
 				/>
 			</div>
 			<div class="input-group mb-1">
-				<span class="input-group-text">Year</span>
+				<span class="input-group-text col-sm-3">Year</span>
 				<input
 					type="number"
 					min="2023"
@@ -284,28 +270,26 @@
 				/>
 			</div>
 			<div class="input-group mb-1">
-				<span class="input-group-text">Assistance Type</span>
+				<span class="input-group-text col-sm-3">Assistance Type</span>
 				<select class="form-select" bind:value={citation_info.assistance_type}>
-					<option value="verbal discussion" selected>Verbal Discussion</option>
+                    <!-- <option value="" selected disabled>Please select</option> -->
+					<option value="verbal discussion">Verbal Discussion</option>
 					<option value="written discussion">Written Discussion</option>
 					<option value="written communication">Written Communication</option>
-					<option value="other">Other</option>
+					<!-- <option value="other">Other</option> -->
 				</select>
-				{#if (citation_info.assistance == "Other")}
+				<!-- {#if (citation_info.assistance_type == "Other")}
                     <div class="input-group">
                         <input type="text" class="form-control" bind:value={citation_info.assistance} placeholder="Other">
                     </div>
-                {/if}
+                {/if} -->
 			</div>
 			<div class="input-group mb-1">
 				<textarea rows="5" bind:value={citation_info.assistance} />
 			</div>
-            <!-- <div class="input-group mb-1">
-				<input type="text" class="datepicker">
-			</div> -->
 			<br />
             <div class="input-group mb-4">
-                <label class="input-group-text" for="inputGroupSelect01">Citation Style</label>
+                <label class="input-group-text col-sm-3" for="inputGroupSelect01">Citation Style</label>
                 <select id="inputGroupSelect01" class="form-select" bind:value={style}>
                     {#each styles as style}
                         <option value={style.id}>{style.name}</option>
